@@ -1,0 +1,242 @@
+<!DOCTYPE html><html><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.4">
+    <title>Napıyoruz</title>
+    <script type="text/javascript" src="js/visual_novel.js"></script>
+    <script type="text/javascript" src="js/helpdesk.js"></script> 
+    
+    <style>
+    p{text-align:center; color:black; font-size:20px}
+    p.big{text-align:center; color:black; font-size:30px}
+    h1{text-align:center; color:black}
+    .up{text-align:center; position: relative; top: -40px;}  
+    body {
+     background-color: #70241c
+      }
+    table.clear {
+		border:0px solid RGB(0,0,0,1);
+    margin-left:auto; 
+    margin-right:auto; 
+    background-color: RGB(0,0,0,0);
+    z-index: 3;
+     }
+    table.clearleft {
+		border:0px solid RGB(0,0,0,1);
+    margin-left:0; 
+    background-color: RGB(0,0,0,0);
+     }
+    .invert{
+      transition-duration: 0.17s;
+     }
+    .invert:hover{
+      filter: invert(100%);
+    }
+    .middle{
+    display: block;
+    margin-left:auto; 
+    margin-right:auto;
+    }
+    img.clickhaha{
+    display: block;
+    margin-left:auto; 
+    margin-right:auto;
+    }
+    img.middleshitfuck{
+    display: block;
+    margin-left:auto; 
+    margin-right:auto;
+    }
+    .middleshitfuck:hover{
+      filter: brightness(110%) blur(1.5px);
+      transition-duration: .12s;
+    }
+    .clickhaha:hover{
+      filter: brightness(550%) blur(20px);
+      transition-duration: 15s;
+    }
+    .clickhaha2:hover{
+      -webkit-transform: rotate(800deg);
+      transition-duration: 110s;
+    }
+    .clickhaha3:{
+      z-index: 1;
+    }
+    
+    
+    
+    #novelDiv {
+        width: 640px;
+        height: 480px;
+        border: 3px solid #004DE3;
+        margin-left: auto;
+        margin-right: auto;
+        position: relative;
+        text-align: center;
+        user-select: none;
+    }
+    
+    #dialogDiv {
+    font-family: "Helvetica, sans-serif";
+    font-size: 21px;
+    position: absolute;
+    width: 630px;
+    height: 100px;
+    top: 370px;
+    left: 0;
+    padding: 5px;
+    background-color: #ECE9D8;
+    color: black;
+    text-align: left;
+    filter: alpha(opacity=100);
+    opacity: 1;
+    }   
+    
+    .menuItem {
+    font-family: "Helvetica, sans-serif;";
+    font-size: 18px;
+    background-color: #0043C1;
+    color: white;
+    text-align: center;
+    width: 45%;
+    margin-left: 51%;
+    margin-top: 0.5em;
+    padding: 0.6em 0.3em;
+    -moz-border-radius: 8px;
+    border-radius: 8px;
+    box-shadow: 2px 2px 5px 5px RGB(205,205,205,0.3) inset;
+    }
+    
+    .menuItem:hover {
+        background-color: #008cf0;
+    }
+        
+        .mark{position:relative; left:0px; z-index:100;}
+        	
+	a.b:link {
+  color: white;
+  background-color: transparent;
+  text-decoration: none;
+}
+
+a.b:visited {
+  color: white;
+  background-color: transparent;
+  text-decoration: none;
+}
+
+a.b:hover {
+  color: lightgrey;
+  background-color: transparent;
+  text-decoration: underline;
+}
+
+a.b:active {
+  color: purple;
+  background-color: transparent;
+  text-decoration: underline;
+}
+	
+    </style>
+  </head>
+  <body id="top" onload="initNovel(800, 600);">
+  <!--<img class="clickhaha3" title="i am literally kasane teto" src="images/tetotall.png" style="position:fixed; height:550px; left:0px; bottom:0px;">-->
+  
+    <table class="clear" width="1000px"><tbody><tr><td>
+      <a href="../../index.html"><img class="invert" src="../indexwebps/logo_yatay.png" height="120px"style="padding:5px;filter: brightness(0) invert(1);"></a>
+      <a href="..//photo/index.html"><img class="invert" src="../galleryv.png" height="110px"></a>
+      <!--<a href="https://twelvemen.neocities.org/2/photologs/plastic/Q2"><img class="invert" src="../stuffv.png" height="110px"></a>-->
+      <a href="https://www.google.com/search?q=uyu%C5%9Fturucu+nas%C4%B1l+yap%C4%B1l%C4%B1r&sourceid=chrome&ie=UTF-8&sei=fYwnaKLTJJGQxc8PxryJyQk" onclick="aynisayfa()"><img class="invert" src="../aboutv.png" height="110px"></a>
+      <a href="/2/ilet/index.html"><img class="invert" src="../extrasv.png" height="110px"></a>
+
+    
+      <table width="1000px" class="clear"><tbody><tr><td>
+        <img src="images/questions1.png">
+        <p class="big">Don't worry, you're not alone</p>
+        <!--<img class="middle" src="images/frog.png">-->
+        <p>blabla started out as, and still remains, as simply a creative outlet.<br style="margin-bottom:10px;">I saw a neocities site one day and heard a Lemon Demon song about geocities and before I knew it I had a site up and running<br style="margin-bottom:10px;">Covid was also happening when I started it so I had a <i>lot</i> of free time</p>
+        <img class="middle" src="images/questions2.png">
+        <!--<p>The most immediately interesting things can be found on the gallery page, and the subpages within. (Those are navigated by with the little buttons on the top and side)<br>It has stuff like my photography or video projects from school, and the next "stuff" page contains, well, stuff, such as things I own or recommend.</p>-->
+        <p>The most immediately interesting things are on the gallery page, where things I create such as photography and art can be found. The pages under the stuff tab contain miscellaneous stuff, from shows I recommend to cooking recipies to my blog.<br style="margin-bottom:10px;">The extras page is everything that doesn't quite fit anywhere else</p>
+        <table width="900px" class="middle"><tbody><tr><td>
+          <img src="images/shador.png" style="margin-right:-150px; z-index:10000; position:relative">
+        </td><td>
+          <marquee class="middle" width="900px" style="overflow: hidden; white-space: nowrap;" behavior="scroll" direction="left" loop="-1">
+            <img class="mark" width="160px;" src="https://türksigara.net/00250-anam%C4%B1n-am%C4%B1n%C4%B1n-suyuynan-sigara.png">
+            <img class="mark" width="160px;" src="https://türksigara.net/00043-hard-kapitalizm-igaras.jpg">
+            <img class="mark" width="160px;" src="https://türksigara.net/00250-anam%C4%B1n-am%C4%B1n%C4%B1n-suyuynan-sigara.png">
+            <img class="mark" width="160px;" src="https://türksigara.net/00043-hard-kapitalizm-igaras.jpg">
+            <img class="mark" width="160px;" src="https://türksigara.net/00250-anam%C4%B1n-am%C4%B1n%C4%B1n-suyuynan-sigara.png">
+            <img class="mark" width="160px;" src="https://türksigara.net/00043-hard-kapitalizm-igaras.jpg">
+            <img class="mark" width="35px;" src="images/kir.gif" style="padding-left:12px; padding-right:15px;">
+            <img class="mark" width="160px;" src="https://türksigara.net/00250-anam%C4%B1n-am%C4%B1n%C4%B1n-suyuynan-sigara.png">
+            <img class="mark" width="160px;" src="https://türksigara.net/00043-hard-kapitalizm-igaras.jpg">
+            <img class="mark" width="160px;" src="https://türksigara.net/00250-anam%C4%B1n-am%C4%B1n%C4%B1n-suyuynan-sigara.png">
+            <img class="mark" width="160px;" src="https://türksigara.net/00043-hard-kapitalizm-igaras.jpg">
+            <img class="mark" width="160px;" src="https://türksigara.net/00250-anam%C4%B1n-am%C4%B1n%C4%B1n-suyuynan-sigara.png">
+            <img class="mark" width="160px;" src="https://türksigara.net/00043-hard-kapitalizm-igaras.jpg">
+          </marquee>
+        </td><td>
+          <img src="images/shador2.png" style="margin-left:-50px; z-index:10000; position:relative">
+        </td></tr></tbody></table>
+        <p style="padding-bottom:20px;">blabla is packed with a few years worth of content so don't hesitate to look around, something somewhere may interest you</p>
+        <!--<p id="help">In case you for some reason wanted to commission something,<br>or just otherwise have a cool idea you want to share,<br>don't hesitate to reach out!<br>   </p>-->
+        
+        
+  <!--<div style="text-align:center; margin-top: 0.5em;">
+    <img src="images/helpdeskbar.png" style="position:relative; top:5px">
+  </div>
+  
+  <div id="novelDiv">
+      <div style="position: absolute;
+          left:0; top: 0; z-index:-1">
+          <img id="background0" src="images/stand.png">
+      </div>
+      <div style="position: absolute;
+          left:0; top: 0; z-index:-1">
+          <img id="background1" src="images/stand.png">
+     </div>
+     <div id="dialogDiv" style="z-index:100">     </div>
+   </div>-->
+   
+        
+        <table class="clear" style="position:relative; top:65px"><tbody><tr><td>
+        <img class="up" src="images/human1112.png" height="36px"></td><td>
+        <p style="padding:3px"></p></td><td>
+        <p class="up">Konum<br>cart curt <a class="b" href="https://www.google.com/maps/search/?api=1&query=41.0672,28.99866" target="_blank">maps</a><!--#3219--></p>
+        </td></tr></tbody></table>
+        <p style="margin-top:10px; margin-bottom:-10px; font-size:12px">This includes any business inquires or if you just wanna chat! <br>blabla</p>
+                
+        <table class="clear" style="position:relative; top:55px"><tbody><tr><td>
+        <img class="up" src="images/human1112.png" height="48px"></td><td>
+        <p style="padding:5px"></p></td><td>
+        <p class="up">The entity behind this whole show can simply be referred<br>to as "blabla" and uses she/her pronouns</p>
+        </td></tr></tbody></table>
+        <p style="margin-top:0px; margin-bottom:0px; font-size:12px">If you ignore this I will ignore you thx ^^</p>
+        
+        <p style="padding:8px"></p>
+        <p style="font-size:20px"><i>blabla is not affiliated with any media of similar title</i></p>
+        <p style="font-size:18.5px; padding:10px; margin-bottom:30px">nuh uh<br>This is something I didn't understand until recently <br><a class="b" target="_blank" href="https://türksigara.net/00999istekpar%C3%A7a.png">please click here if you want to know</a></p>
+        <p style="font-size:10px"><i><a style="color:black; cursor:pointer; text-decoration: none;" href="https://türksigara.net">good luck!</a></i><br>
+        <span style="font-size:14px"><a style="color:black; cursor:pointer; text-decoration: none;" href="https://türksigara.net">☿</a></span></p>
+        
+        
+        <p style="padding:10px"></p>
+        <div class="middle" style="width:120px">
+        <a href="cc.html"><img class="middleshitfuck" style="padding:10px" width="115px" src="images/885.png"></a>
+        </div>
+        
+      </td></tr></tbody></table>
+      <p style="padding:40px"></p>
+      <!--<a href="#top"><img class="invert" style="display: block; margin-left:auto; margin-right:auto;" src="btop.png" width=100px alt="return to top"></a>-->
+    </td></tr></tbody></table>
+    
+    
+    <script>
+      function aynisayfa() {
+        alert("mal aynı sayfadasın");
+      }
+      </script>
+  
+  
+
+</body></html>
