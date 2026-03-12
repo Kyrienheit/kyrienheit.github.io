@@ -6,11 +6,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>sentient</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Poly-decomp needed by Matter.js for concave shapes -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/poly-decomp/0.3.0/decomp.min.js"></script>
     <!-- Matter.js from CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 </head>
 
 <body>
+    <!-- Spawn Menu (Left Side) -->
+    <div id="spawn-menu">
+        <h3>Spawn</h3>
+        <button id="spawn-ragdoll" class="spawn-btn">Ragdoll</button>
+        <button id="spawn-normal-box" class="spawn-btn">Normal Box</button>
+        <button id="spawn-box" class="spawn-btn">Destructible Box</button>
+        <button id="spawn-pistol" class="spawn-btn">Pistol</button>
+        <button id="spawn-syringe-adrenaline" class="spawn-btn">Adrenaline Syringe</button>
+    </div>
+
+    <!-- Tools Menu (Right Side) -->
+    <div id="tools-menu">
+        <h3>Tools</h3>
+        <button id="tool-wire" class="tool-btn">Wire</button>
+        <button id="tool-bandage" class="tool-btn">Bandage</button>
+    </div>
+
     <!-- Context Menu (Right Click) -->
     <div id="context-menu" class="hidden">
         <ul>

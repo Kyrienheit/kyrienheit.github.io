@@ -10,9 +10,15 @@ const Engine = Matter.Engine,
       Body = Matter.Body,
       Events = Matter.Events,
       Query = Matter.Query,
-      Vector = Matter.Vector;
+      Vector = Matter.Vector,
+      Common = Matter.Common;
 
 // 1. Create Engine and World
+// Setup decomp for concave polygons (Pistol)
+if (typeof window.decomp !== 'undefined') {
+    Common.setDecomp(window.decomp);
+}
+
 const engine = Engine.create();
 const world = engine.world;
 engine.world.gravity.y = 1;
@@ -101,15 +107,54 @@ Events.on(render, 'afterRender', function() {
     }
 });
 
-// ---------- Keyboard Control Logic (A/D to Rotate) ----------
-const keys = { a: false, d: false };
+// ---------- Global Mouse Tracking ----------
+const currentMousePos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+
+window.addEventListener('mousemove', (e) => {
+    currentMousePos.x = e.clientX;
+    currentMousePos.y = e.clientY;
+});
+
+// ---------- Keyboard Control Logic (A/D/E/Q/F) ----------
+const keys = { a: false, d: false, f: false };
+
 window.addEventListener('keydown', (e) => {
     const key = e.key.toLowerCase();
-    if (key === 'a' || key === 'd') keys[key] = true;
+    if (keys.hasOwnProperty(key)) keys[key] = true;
+    
+    // Spawn Logic Q (Left) / E (Right)
+    if (key === 'e' || key === 'q') {
+        if (!spawnMode) return;
+        
+        // Use the globally tracked mouse position because `mouse.position` from matter might not be updated when holding mouse still
+        const mouseX = currentMousePos.x;
+        const mouseY = currentMousePos.y;
+        
+        console.log(`[Spawn] Attempting to spawn '${spawnMode}' at {x: ${mouseX}, y: ${mouseY}}`);
+
+        // No offset needed, spawn right at mouse tip
+        if (spawnMode === 'ragdoll') createRagdoll(mouseX, mouseY);
+        else if (spawnMode === 'normalbox') createNormalBox(mouseX, mouseY);
+        else if (spawnMode === 'box') createDestructibleBox(mouseX, mouseY);
+        else if (spawnMode === 'pistol') createPistol(mouseX, mouseY);
+        else if (spawnMode === 'syringe-adrenaline') createSyringe(mouseX, mouseY);
+        
+        console.log(`[Spawn] Spawn complete.`);
+    }
+    
+    // Firing Logic F
+    if (key === 'f') {
+        // Find if we are holding a pistol with the mouse
+        const holdBody = mouseConstraint.body;
+        if (holdBody && holdBody.label === 'pistol') {
+            firePistol(holdBody);
+        }
+    }
 });
+
 window.addEventListener('keyup', (e) => {
     const key = e.key.toLowerCase();
-    if (key === 'a' || key === 'd') keys[key] = false;
+    if (keys.hasOwnProperty(key)) keys[key] = false;
 });
 
 Events.on(engine, 'beforeUpdate', function() {
@@ -170,6 +215,7 @@ function spawnBlood(x, y, amount, velocityX = 0, velocityY = 0) {
 const ragdolls = [];
 
 function createRagdoll(x, y) {
+    console.log(`[Ragdoll] Creating ragdoll at ${x}, ${y}`);
     const group = Body.nextGroup(true); // Don't allow connected limbs to collide directly
     
     // Appearance and mass settings for different body parts
@@ -179,6 +225,7 @@ function createRagdoll(x, y) {
     const lowerLimbOptions = { collisionFilter: { group: group }, friction: 0.8, density: 0.05, render: { fillStyle: '#ffccaa' } };
 
     // Body parts definitions
+    console.log(`[Ragdoll] Creating parts...`);
     const head = Bodies.circle(x, y - 60, 15, headOptions);
     const torso = Bodies.rectangle(x, y - 15, 30, 50, torsoOptions);
     
@@ -219,6 +266,8 @@ function createRagdoll(x, y) {
     person.torso = torso;
     person.leftUpperLeg = leftUpperLeg;
     person.rightUpperLeg = rightUpperLeg;
+    person.leftLowerLeg = leftLowerLeg;
+    person.rightLowerLeg = rightLowerLeg;
 
     // Joint stiffness and damping (easier to rip off later if needed)
     const jointOptions = { stiffness: 0.9, damping: 0.1, length: 0, render: { visible: false } };
@@ -289,10 +338,132 @@ function createRagdoll(x, y) {
     ];
 
     ragdolls.push(person);
+    Composite.add(world, person); // CRITICAL: Actually add the ragdoll to the physics world!
+    
+    console.log(`[Ragdoll] Ragdoll created and added to world.`);
     return person;
 }
 
-// ---------- Ragdoll Logic Update ----------
+// ---------- Props & Weapons Creation Logic ----------
+const destructibleBoxes = [];
+
+function createNormalBox(x, y) {
+    const box = Bodies.rectangle(x, y, 60, 60, { 
+        render: { fillStyle: '#999999' }, // Gray metal color
+        friction: 0.8,
+        density: 0.05
+    });
+    Composite.add(world, box);
+    return box;
+}
+
+function createDestructibleBox(x, y) {
+    const box = Bodies.rectangle(x, y, 60, 60, { 
+        render: { fillStyle: '#8b5a2b' }, // Wood color
+        friction: 0.8,
+        density: 0.05
+    });
+    box.isDestructible = true;
+    destructibleBoxes.push(box);
+    Composite.add(world, box);
+    return box;
+}
+
+function shatterBox(box) {
+    // Remove the original box
+    Composite.remove(world, box);
+    const index = destructibleBoxes.indexOf(box);
+    if (index > -1) destructibleBoxes.splice(index, 1);
+
+    // Create 4 smaller pieces directly at the box position
+    const { x, y } = box.position;
+    const pieces = [];
+    const size = 30; // Half size
+    
+    // Slight random velocities
+    const vopts = () => (Math.random() - 0.5) * 10;
+    
+    pieces.push(Bodies.rectangle(x - 15, y - 15, size, size, { render: { fillStyle: '#6b4421' } }));
+    pieces.push(Bodies.rectangle(x + 15, y - 15, size, size, { render: { fillStyle: '#6b4421' } }));
+    pieces.push(Bodies.rectangle(x - 15, y + 15, size, size, { render: { fillStyle: '#6b4421' } }));
+    pieces.push(Bodies.rectangle(x + 15, y + 15, size, size, { render: { fillStyle: '#6b4421' } }));
+
+    pieces.forEach(p => {
+        Body.setVelocity(p, { x: box.velocity.x * 0.5 + vopts(), y: box.velocity.y * 0.5 + vopts() });
+        Body.setAngularVelocity(p, (Math.random() - 0.5) * 0.5);
+    });
+
+    Composite.add(world, pieces);
+}
+
+function createPistol(x, y) {
+    console.log(`[Pistol] Attempting to create pistol using Body.create({ parts }) fallback.`);
+    // In Matter.js, compound bodies made with 'parts' are completely solid/stiff 
+    // without needing poly-decomp or constraints.
+    
+    // We position the parts relative to a center point so they combine cleanly into the `parts` array.
+    const barrel = Bodies.rectangle(15, -5, 30, 10, { render: { fillStyle: '#444' } });
+    // Grip is rotated slightly
+    const grip = Bodies.rectangle(-5, 5, 10, 20, { render: { fillStyle: '#333' }, angle: Math.PI * 0.1 });
+    
+    const pistolBody = Body.create({
+        parts: [barrel, grip],
+        label: "pistol",
+        friction: 0.8,
+        density: 0.05
+    });
+    
+    Body.setPosition(pistolBody, { x: x, y: y });
+
+    Composite.add(world, pistolBody);
+    console.log(`[Pistol] Pistol created as single compound body.`);
+    return pistolBody;
+}
+
+function firePistol(pistolBody) {
+    if (!pistolBody || pistolBody.label !== 'pistol') return;
+
+    const angle = pistolBody.angle;
+    // Length from center to barrel tip (approx)
+    const barrelLength = 15; 
+    
+    // Using the combined body's center to calculate tip
+    const barrelX = pistolBody.position.x + Math.cos(angle) * barrelLength;
+    const barrelY = pistolBody.position.y + Math.sin(angle) * barrelLength;
+    
+    const bullet = Bodies.circle(barrelX, barrelY, 3, {
+        label: "bullet",
+        render: { fillStyle: '#ffcc00' },
+        friction: 0.1,
+        restitution: 0.2,
+        density: 1.0 // Heavy for impact
+    });
+    
+    // Very high velocity for bullet
+    const bulletSpeed = 50;
+    Body.setVelocity(bullet, {
+        x: pistolBody.velocity.x + Math.cos(angle) * bulletSpeed,
+        y: pistolBody.velocity.y + Math.sin(angle) * bulletSpeed
+    });
+    
+    // Recoil (kickback) on the solid body
+    const kickback = 2;
+    Body.setVelocity(pistolBody, {
+        x: pistolBody.velocity.x - Math.cos(angle) * kickback,
+        y: pistolBody.velocity.y - Math.sin(angle) * kickback
+    });
+
+    Composite.add(world, bullet);
+    
+    // Muzzle flash particle (visual only)
+    const flash = Bodies.circle(barrelX + Math.cos(angle)*5, barrelY + Math.sin(angle)*5, 5, {
+        isSensor: true, render: { fillStyle: '#ffffaa' }
+    });
+    Composite.add(world, flash);
+    setTimeout(() => Composite.remove(world, flash), 50);
+}
+
+// ---------- Ragdoll & Game Logic Update ----------
 Events.on(engine, 'beforeUpdate', function() {
     ragdolls.forEach(person => {
         // Enforce Joint Limits
@@ -316,17 +487,40 @@ Events.on(engine, 'beforeUpdate', function() {
 
         // Alive & Balance Logic
         if (person.isAlive && person.isConscious) {
-            // Keep torso upright
+            // Keep torso upright with a strong PD controller effect
             const torsoAngle = person.torso.angle;
-            person.torso.torque = -torsoAngle * 0.08 * person.torso.mass;
+            const torsoAngularVelocity = person.torso.angularVelocity;
+            // Target angle is 0 (straight up)
+            person.torso.torque = (-torsoAngle * 1.5 - torsoAngularVelocity * 0.1) * person.torso.mass;
             
             // Keep head upright relative to torso
             const headRelAngle = person.head.angle - person.torso.angle;
-            person.head.torque = -headRelAngle * 0.05 * person.head.mass;
+            person.head.torque = (-headRelAngle * 0.5) * person.head.mass;
 
-            // Keep upper legs somewhat straight down to simulate standing
-            person.leftUpperLeg.torque = -person.leftUpperLeg.angle * 0.05 * person.leftUpperLeg.mass;
-            person.rightUpperLeg.torque = -person.rightUpperLeg.angle * 0.05 * person.rightUpperLeg.mass;
+            // --- Active Leg AI (Trying to stand) ---
+            // Force upper legs to point straight down
+            const leftHipAngle = person.leftUpperLeg.angle;
+            const rightHipAngle = person.rightUpperLeg.angle;
+            
+            person.leftUpperLeg.torque = (-leftHipAngle * 0.8 - person.leftUpperLeg.angularVelocity * 0.05) * person.leftUpperLeg.mass;
+            person.rightUpperLeg.torque = (-rightHipAngle * 0.8 - person.rightUpperLeg.angularVelocity * 0.05) * person.rightUpperLeg.mass;
+
+            // Force knees to stay straight (relative angle between upper and lower leg should be ~0)
+            const leftKneeRelAngle = person.leftLowerLeg.angle - person.leftUpperLeg.angle;
+            const rightKneeRelAngle = person.rightLowerLeg.angle - person.rightUpperLeg.angle;
+            
+            // Apply equal and opposite torque to straighten the knee joint
+            const kneeTorqueStrength = 0.5;
+            person.leftLowerLeg.torque = (-leftKneeRelAngle * kneeTorqueStrength) * person.leftLowerLeg.mass;
+            person.rightLowerLeg.torque = (-rightKneeRelAngle * kneeTorqueStrength) * person.rightLowerLeg.mass;
+            
+            // Add a little friction to the feet (lower legs) so they don't slide out endlessly
+            person.leftLowerLeg.friction = 1.0;
+            person.rightLowerLeg.friction = 1.0;
+        } else {
+            // Unconscious/Dead characters lose leg friction to ragdoll completely
+            person.leftLowerLeg.friction = 0.8;
+            person.rightLowerLeg.friction = 0.8;
         }
 
         // Very basic trauma/damage logic based on impact/velocity (to be expanded)
@@ -392,6 +586,86 @@ Events.on(engine, 'beforeUpdate', function() {
             }
         }
     });
+
+    // Destructible Box Logic Update
+    destructibleBoxes.forEach(box => {
+        const speed = Vector.magnitude(box.velocity);
+        if (speed > 25) { // Threshold to break
+            shatterBox(box);
+        }
+    });
+
+    // Listen to actual collisions for destroying boxes against walls/static things
+});
+
+Events.on(engine, 'collisionStart', function(event) {
+    const pairs = event.pairs;
+    for (let i = 0; i < pairs.length; i++) {
+        const bodyA = pairs[i].bodyA;
+        const bodyB = pairs[i].bodyB;
+
+        // Calculate rough impact velocity
+        const relVel = Vector.sub(bodyA.velocity, bodyB.velocity);
+        const impactForce = Vector.magnitude(relVel) * ((bodyA.mass * bodyB.mass) / (bodyA.mass + bodyB.mass));
+
+        // Speed-based damage
+        if (impactForce > 40 && (bodyA.isDestructible || bodyB.isDestructible)) {
+            if (bodyA.isDestructible) shatterBox(bodyA);
+            if (bodyB.isDestructible) shatterBox(bodyB);
+        }
+        
+        // Syringe Injection Logic
+        if (bodyA.label === 'syringe' || bodyB.label === 'syringe') {
+            const syringe = bodyA.label === 'syringe' ? bodyA : bodyB;
+            const target = bodyA.label === 'syringe' ? bodyB : bodyA;
+            
+            // Only inject if hitting hard enough (needle刺入)
+            if (impactForce > 5 && target.parentRagdoll) {
+                const r = target.parentRagdoll;
+                if (r.isAlive) {
+                    // Adrenaline Effect: Max out heart rate, wake up, slight heal
+                    r.heartRate = Math.min(200, r.heartRate + 80);
+                    r.isConscious = true;
+                    r.painLevel = Math.max(0, r.painLevel - 20); // Adrenaline dulls pain temporarily
+                    console.log("[Medical] Adrenaline injected!");
+                    
+                    // Could add a visual effect or pin the syringe to the body here
+                    // For now, let's just delete the syringe to symbolize use
+                    Composite.remove(world, syringe);
+                }
+            }
+        }
+        
+        // Bullet Hit Detection
+        if (bodyA.label === 'bullet' || bodyB.label === 'bullet') {
+            const bullet = bodyA.label === 'bullet' ? bodyA : bodyB;
+            const target = bodyA.label === 'bullet' ? bodyB : bodyA;
+            
+            // Remove bullet slightly after impact to simulate penetration/stopping
+            setTimeout(() => Composite.remove(world, bullet), 20);
+
+            // If bullet hits a ragdoll
+            if (target.parentRagdoll) {
+                const r = target.parentRagdoll;
+                if (r.isAlive) {
+                    r.health -= 40; // High damage
+                    r.painLevel += 60;
+                    r.bloodVolume -= 15; // Instant blood loss
+                    r.isBleeding = true;
+                    
+                    if (r.health <= 0) {
+                        r.isAlive = false;
+                        r.isConscious = false;
+                        r.heartRate = 0;
+                        r.torso.render.fillStyle = '#333333';
+                    }
+                }
+                
+                // Big blood splatter
+                spawnBlood(bullet.position.x, bullet.position.y, 10, bullet.velocity.x, bullet.velocity.y);
+            }
+        }
+    }
 });
 
 // ---------- UI Interaction: Context Menu & Inspector ----------
@@ -487,13 +761,253 @@ setInterval(() => {
 
 }, 100); // Update 10 times a second
 
-// 5. Add a test ragdoll to the scene
-const testRagdoll = createRagdoll(window.innerWidth / 2, 200);
-Composite.add(world, testRagdoll);
+// ---------- Spawn Menu Logic ----------
+let spawnMode = null; // 'ragdoll', 'normalbox', 'box', 'pistol', 'syringe-adrenaline'
+let toolMode = null; // 'wire', 'bandage'
 
-// Add an extra box for throwing at the ragdoll
-const boxA = Bodies.rectangle(window.innerWidth / 2 - 150, 100, 80, 80, { render: { fillStyle: '#ff5555' } });
-Composite.add(world, boxA);
+const spawnBtns = document.querySelectorAll('.spawn-btn');
+
+function setSpawnMode(mode, btnId) {
+    if (spawnMode === mode || !btnId) { // added !btnId support to clear
+        spawnMode = null; // Toggle off
+        spawnBtns.forEach(b => b.classList.remove('active'));
+        return;
+    }
+    spawnMode = mode;
+    spawnBtns.forEach(b => b.classList.remove('active'));
+    document.getElementById(btnId).classList.add('active');
+    
+    // Clear tool mode if picking a spawn
+    if (toolMode) setToolMode(toolMode, null);
+}
+
+document.getElementById('spawn-ragdoll').addEventListener('click', () => setSpawnMode('ragdoll', 'spawn-ragdoll'));
+document.getElementById('spawn-normal-box').addEventListener('click', () => setSpawnMode('normalbox', 'spawn-normal-box'));
+document.getElementById('spawn-box').addEventListener('click', () => setSpawnMode('box', 'spawn-box'));
+document.getElementById('spawn-pistol').addEventListener('click', () => setSpawnMode('pistol', 'spawn-pistol'));
+document.getElementById('spawn-syringe-adrenaline').addEventListener('click', () => setSpawnMode('syringe-adrenaline', 'spawn-syringe-adrenaline'));
+
+
+function createSyringe(x, y) {
+    const syringeWidth = 8;
+    const syringeLength = 30;
+    
+    const body = Bodies.rectangle(x, y, syringeWidth, syringeLength, {
+        label: "syringe",
+        render: { fillStyle: '#baddff' },
+        friction: 0.5,
+        density: 0.05
+    });
+    
+    // Add a tiny needle visually (or as composite, but body is simpler for now)
+    const needle = Bodies.rectangle(x, y - syringeLength/2 - 5, 2, 10, { 
+        render: { fillStyle: '#ccc' }
+    });
+    
+    const syringeComposite = Body.create({
+        parts: [body, needle],
+        label: "syringe",
+        friction: 0.5,
+        density: 0.05
+    });
+    
+    Body.setPosition(syringeComposite, { x: x, y: y });
+    Composite.add(world, syringeComposite);
+    return syringeComposite;
+}
+
+// ---------- Tools Menu (Drag & Connect) Logic ----------
+const toolBtns = document.querySelectorAll('.tool-btn');
+
+let dragStartBody = null;
+let dragStartPoint = null;
+
+function setToolMode(mode, btnId) {
+    if (toolMode === mode) {
+        stopToolMode(); // properly cancel it and restore mouse constraint
+        return;
+    }
+    toolMode = mode;
+    toolBtns.forEach(b => b.classList.remove('active'));
+    document.getElementById(btnId).classList.add('active');
+    
+    // Clear spawn mode if picking a tool
+    if (spawnMode) setSpawnMode(spawnMode, null);
+    
+    // Disable mouse interaction constraint while using tools so we don't accidentally throw objects
+    mouseConstraint.collisionFilter.mask = 0; 
+}
+
+function stopToolMode() {
+    toolMode = null;
+    toolBtns.forEach(b => b.classList.remove('active'));
+    // Restore mouse constraint
+    mouseConstraint.collisionFilter.mask = 0xFFFFFFFF;
+    dragStartBody = null;
+    dragStartPoint = null;
+}
+
+// Tool Interaction Listeners
+render.canvas.addEventListener('mousedown', (e) => {
+    if (e.button !== 0 || !toolMode) return; // Only left click for tools
+
+    // Find the body we clicked on
+    const bodies = Composite.allBodies(world);
+    const clickedBodies = Query.point(bodies, currentMousePos);
+    
+    if (clickedBodies.length > 0) {
+        // Start dragging from the top-most clicked body
+        dragStartBody = clickedBodies[0];
+        dragStartPoint = { x: currentMousePos.x, y: currentMousePos.y };
+        
+        // Compute local offset for exact attachment point
+        dragStartBody.localClickOffset = {
+            x: currentMousePos.x - dragStartBody.position.x,
+            y: currentMousePos.y - dragStartBody.position.y
+        };
+    }
+});
+
+window.addEventListener('mouseup', (e) => {
+    if (e.button !== 0 || !toolMode || !dragStartBody) return;
+
+    const endPos = { x: e.clientX, y: e.clientY };
+    const bodies = Composite.allBodies(world);
+    const endBodies = Query.point(bodies, endPos);
+    
+    if (endBodies.length > 0) {
+        const endBody = endBodies[0];
+        
+        // Prevent connecting a body to itself
+        if (endBody !== dragStartBody) {
+            
+            // WIRE: Create a physical multi-segment rope
+            if (toolMode === 'wire') {
+                const startPoint = { 
+                    x: dragStartBody.position.x + dragStartBody.localClickOffset.x, 
+                    y: dragStartBody.position.y + dragStartBody.localClickOffset.y 
+                };
+                const endPoint = { 
+                    x: endBody.position.x + (endPos.x - endBody.position.x), 
+                    y: endBody.position.y + (endPos.y - endBody.position.y) 
+                };
+                
+                const distance = Vector.magnitude(Vector.sub(endPoint, startPoint));
+                const segmentLength = 15;
+                const segmentsCount = Math.max(3, Math.floor(distance / segmentLength));
+                
+                // Create a collision group specifically for this rope so its segments don't collide with each other
+                const ropeGroup = Body.nextGroup(true);
+                
+                // create the composite chain
+                const ropeComposite = Matter.Composites.stack(startPoint.x, startPoint.y, segmentsCount, 1, 0, 0, function(x, y) {
+                    return Bodies.rectangle(x, y, segmentLength, 4, { 
+                        collisionFilter: { group: ropeGroup },
+                        render: { fillStyle: '#44bb44' },
+                        density: 0.05,
+                        frictionAir: 0.05
+                    });
+                });
+                
+                Matter.Composites.chain(ropeComposite, 0.4, 0, -0.4, 0, { 
+                    stiffness: 0.9, length: 1, render: { visible: false } 
+                });
+                
+                // Anchor the first segment to the dragStartBody
+                const firstSegment = ropeComposite.bodies[0];
+                Composite.add(ropeComposite, Constraint.create({
+                    bodyA: dragStartBody,
+                    bodyB: firstSegment,
+                    pointA: dragStartBody.localClickOffset,
+                    pointB: { x: -segmentLength/2, y: 0 },
+                    stiffness: 0.9,
+                    render: { visible: false }
+                }));
+
+                // Anchor the last segment to the endBody
+                const lastSegment = ropeComposite.bodies[ropeComposite.bodies.length - 1];
+                Composite.add(ropeComposite, Constraint.create({
+                    bodyA: endBody,
+                    bodyB: lastSegment,
+                    pointA: { x: endPos.x - endBody.position.x, y: endPos.y - endBody.position.y },
+                    pointB: { x: segmentLength/2, y: 0 },
+                    stiffness: 0.9,
+                    render: { visible: false }
+                }));
+
+                Composite.add(world, ropeComposite);
+                console.log("[Tools] Connected with physical rope.");
+            }
+            // BANDAGE: Heal and stop bleeding if attached to a ragdoll part
+            else if (toolMode === 'bandage') {
+                // If either end is a ragdoll part
+                const r1 = dragStartBody.parentRagdoll;
+                const r2 = endBody.parentRagdoll;
+                
+                if (r1 || r2) {
+                    const r = r1 || r2;
+                    if (r.isAlive && r.isBleeding) {
+                        r.isBleeding = false;
+                        console.log("[Medical] Applied bandage. Bleeding stopped.");
+                        
+                        // Visual patch (fixed square on top of the limb)
+                        const targetPart = r1 ? dragStartBody : endBody;
+                        const targetPos = r1 ? dragStartPoint : endPos;
+                        
+                        const bandagePatch = Bodies.rectangle(targetPos.x, targetPos.y, 10, 10, {
+                            render: { fillStyle: '#eeeecc' },
+                            collisionFilter: { group: -1, mask: 0 } // No collisions, visual only
+                        });
+                        
+                        // Stick the patch to the body
+                        const stick = Constraint.create({
+                            bodyA: targetPart,
+                            bodyB: bandagePatch,
+                            pointA: { x: targetPos.x - targetPart.position.x, y: targetPos.y - targetPart.position.y },
+                            stiffness: 1, length: 0,
+                            render: { visible: false }
+                        });
+                        
+                        Composite.add(world, [bandagePatch, stick]);
+                    }
+                }
+            }
+        }
+    }
+    
+    dragStartBody = null;
+    dragStartPoint = null;
+});
+
+// Render Tool Drag Line
+Events.on(render, 'afterRender', function() {
+    if (toolMode && dragStartBody) {
+        const ctx = render.context;
+        ctx.beginPath();
+        const startX = dragStartBody.position.x + dragStartBody.localClickOffset.x;
+        const startY = dragStartBody.position.y + dragStartBody.localClickOffset.y;
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(currentMousePos.x, currentMousePos.y);
+        
+        ctx.strokeStyle = toolMode === 'wire' ? '#44bb44' : '#eeeecc';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([5, 5]); // Dashed line while drawing
+        ctx.stroke();
+        ctx.setLineDash([]); // Reset
+    }
+});
+
+
+document.getElementById('tool-wire').addEventListener('click', () => setToolMode('wire', 'tool-wire'));
+document.getElementById('tool-bandage').addEventListener('click', () => setToolMode('bandage', 'tool-bandage'));
+
+// Right click cancels both tools and spawns
+render.canvas.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    spawnMode = null;
+    spawnBtns.forEach(b => b.classList.remove('active'));
+    stopToolMode();
+});
 
 // 6. Run Engine and Renderer
 Render.run(render);
