@@ -19,6 +19,106 @@ canvas {
     display: none !important;
 }
 
+/* Spawn Menu (Left) */
+#spawn-menu {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 200px;
+    background-color: rgba(30, 30, 30, 0.9);
+    border: 1px solid #555;
+    border-radius: 6px;
+    color: #fff;
+    font-family: monospace;
+    z-index: 900;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#spawn-menu h3 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    border-bottom: 1px solid #555;
+    padding-bottom: 5px;
+    text-align: center;
+}
+
+.spawn-btn {
+    background-color: #3a3a3a;
+    color: #eee;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 8px;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.spawn-btn:hover {
+    background-color: #555;
+}
+
+.spawn-btn.active {
+    background-color: #777;
+    border-color: #fff;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+}
+
+/* Tools Menu (Right) */
+#tools-menu {
+    position: absolute;
+    top: 250px; /* Below the Inspector */
+    right: 20px;
+    width: 250px;
+    background-color: rgba(30, 30, 30, 0.9);
+    border: 1px solid #555;
+    border-radius: 6px;
+    color: #fff;
+    font-family: monospace;
+    z-index: 900;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#tools-menu h3 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    border-bottom: 1px solid #555;
+    padding-bottom: 5px;
+    text-align: center;
+}
+
+.tool-btn {
+    background-color: #334433; /* Slightly green tint for medical/tools */
+    color: #eee;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 8px;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.tool-btn:hover {
+    background-color: #445544;
+}
+
+.tool-btn.active {
+    background-color: #557755;
+    border-color: #fff;
+    box-shadow: 0 0 8px rgba(100, 255, 100, 0.4);
+}
+
 /* Context Menu */
 #context-menu {
     position: absolute;
