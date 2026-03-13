@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sentient</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Poly-decomp needed by Matter.js for concave shapes -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/poly-decomp/0.3.0/decomp.min.js"></script>
+    <!-- Matter.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+</head>
+
+<body>
+    <!-- Spawn Menu (Left Side) -->
+    <div id="spawn-menu">
+        <h3>Spawn</h3>
+        <button id="spawn-ragdoll" class="spawn-btn">Ragdoll</button>
+        <button id="spawn-normal-box" class="spawn-btn">Normal Box</button>
+        <button id="spawn-box" class="spawn-btn">Destructible Box</button>
+        <button id="spawn-pistol" class="spawn-btn">Pistol</button>
+        <button id="spawn-syringe-adrenaline" class="spawn-btn">Adrenaline Syringe</button>
+    </div>
+
+    <!-- Tools Menu (Right Side) -->
+    <div id="tools-menu">
+        <h3>Tools</h3>
+        <button id="tool-wire" class="tool-btn">Wire</button>
+        <button id="tool-bandage" class="tool-btn">Bandage</button>
+    </div>
+
+    <!-- Context Menu (Right Click) -->
+    <div id="context-menu" class="hidden">
+        <ul>
+            <li id="menu-inspect">Inspect</li>
+            <!-- Future options like bandages, syringes can go here -->
+        </ul>
+    </div>
+
+    <!-- Medical Inspector Panel -->
+    <div id="inspector-panel" class="hidden">
+        <div class="panel-header">
+            <h3>Medical Inspector</h3>
+            <button id="close-inspector">X</button>
+        </div>
+        <div class="panel-content">
+            <div class="stat-row">
+                <span>Status:</span>
+                <span id="insp-status" class="status-alive">Alive</span>
+            </div>
+            <div class="stat-row">
+                <span>Consciousness:</span>
+                <span id="insp-conscious">Aware</span>
+            </div>
+            <div class="stat-row">
+                <span>Heart Rate:</span>
+                <span id="insp-hr">72 bpm</span>
+            </div>
+            <div class="stat-row">
+                <span>Blood Volume:</span>
+                <span id="insp-blood">100%</span>
+            </div>
+            <div class="stat-row">
+                <span>Pain Level:</span>
+                <span id="insp-pain">None</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+
+</html>

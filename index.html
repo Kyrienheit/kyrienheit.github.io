@@ -4,70 +4,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>sentient</title>
+    <title>my playground</title>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <!-- Poly-decomp needed by Matter.js for concave shapes -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/poly-decomp/0.3.0/decomp.min.js"></script>
-    <!-- Matter.js from CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 </head>
 
 <body>
-    <!-- Spawn Menu (Left Side) -->
-    <div id="spawn-menu">
-        <h3>Spawn</h3>
-        <button id="spawn-ragdoll" class="spawn-btn">Ragdoll</button>
-        <button id="spawn-normal-box" class="spawn-btn">Normal Box</button>
-        <button id="spawn-box" class="spawn-btn">Destructible Box</button>
-        <button id="spawn-pistol" class="spawn-btn">Pistol</button>
-        <button id="spawn-syringe-adrenaline" class="spawn-btn">Adrenaline Syringe</button>
-    </div>
+    <div class="desktop">
+        <!-- Wii Menu Style Grid -->
+        <main class="channel-grid">
 
-    <!-- Tools Menu (Right Side) -->
-    <div id="tools-menu">
-        <h3>Tools</h3>
-        <button id="tool-wire" class="tool-btn">Wire</button>
-        <button id="tool-bandage" class="tool-btn">Bandage</button>
-    </div>
+            <!-- Channel 1: Sandbox Preview -->
+            <a href="sandbox/index.html" class="channel" data-sound="hover">
+                <div class="channel-inner">
+                    <iframe src="sandbox/index.html" scrolling="no" class="preview-iframe"></iframe>
+                    <div class="channel-overlay"></div>
+                </div>
+                <div class="channel-title">MaD 2 clone</div>
+            </a>
 
-    <!-- Context Menu (Right Click) -->
-    <div id="context-menu" class="hidden">
-        <ul>
-            <li id="menu-inspect">Inspect</li>
-            <!-- Future options like bandages, syringes can go here -->
-        </ul>
-    </div>
+            <!-- Empty Channels (Could add your other projects here) -->
+            <div class="channel empty" data-sound="hover">
+                <div class="channel-inner"></div>
+            </div>
+            <div class="channel empty" data-sound="hover">
+                <div class="channel-inner"></div>
+            </div>
+            <div class="channel empty" data-sound="hover">
+                <div class="channel-inner"></div>
+            </div>
+            <div class="channel empty" data-sound="hover">
+                <div class="channel-inner"></div>
+            </div>
+            <div class="channel empty" data-sound="hover">
+                <div class="channel-inner"></div>
+            </div>
+            <div class="channel empty" data-sound="hover">
+                <div class="channel-inner"></div>
+            </div>
+            <div class="channel empty" data-sound="hover">
+                <div class="channel-inner"></div>
+            </div>
+            <!--<div class="channel empty" data-sound="hover">
+                <div class="channel-inner"></div>
+            </div>
+            <div class="channel empty" data-sound="hover">
+                <div class="channel-inner"></div>
+            </div>
+            <div class="channel empty" data-sound="hover">
+                <div class="channel-inner"></div>
+            </div>
+            <div class="channel empty" data-sound="hover">
+                <div class="channel-inner"></div>
+            </div>-->
 
-    <!-- Medical Inspector Panel -->
-    <div id="inspector-panel" class="hidden">
-        <div class="panel-header">
-            <h3>Medical Inspector</h3>
-            <button id="close-inspector">X</button>
-        </div>
-        <div class="panel-content">
-            <div class="stat-row">
-                <span>Status:</span>
-                <span id="insp-status" class="status-alive">Alive</span>
-            </div>
-            <div class="stat-row">
-                <span>Consciousness:</span>
-                <span id="insp-conscious">Aware</span>
-            </div>
-            <div class="stat-row">
-                <span>Heart Rate:</span>
-                <span id="insp-hr">72 bpm</span>
-            </div>
-            <div class="stat-row">
-                <span>Blood Volume:</span>
-                <span id="insp-blood">100%</span>
-            </div>
-            <div class="stat-row">
-                <span>Pain Level:</span>
-                <span id="insp-pain">None</span>
-            </div>
-        </div>
-    </div>
+        </main>
 
+        <!-- Bottom Bar (Messages, Settings etc. mock) -->
+        <footer class="bottom-bar">
+            <!--<div class="footer-btn left-btn" data-sound="click">
+                <span style="font-size: 0.9em;">⚙️</span> Settings
+            </div> -->
+
+            <div class="clock" id="clock">10:00</div>
+
+            <!-- <div class="footer-btn right-btn" data-sound="click">
+                Message Board <span style="font-size: 0.9em;">✉️</span>
+            </div> -->
+        </footer>
+    </div>
     <script src="main.js"></script>
 </body>
 
