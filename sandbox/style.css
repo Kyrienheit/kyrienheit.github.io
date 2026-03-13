@@ -1,0 +1,216 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #1a1a1a; /* Dark theme */
+    font-family: sans-serif;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* UI Elements */
+.hidden {
+    display: none !important;
+}
+
+/* Spawn Menu (Left) */
+#spawn-menu {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 200px;
+    background-color: rgba(30, 30, 30, 0.9);
+    border: 1px solid #555;
+    border-radius: 6px;
+    color: #fff;
+    font-family: monospace;
+    z-index: 900;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#spawn-menu h3 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    border-bottom: 1px solid #555;
+    padding-bottom: 5px;
+    text-align: center;
+}
+
+.spawn-btn {
+    background-color: #3a3a3a;
+    color: #eee;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 8px;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.spawn-btn:hover {
+    background-color: #555;
+}
+
+.spawn-btn.active {
+    background-color: #777;
+    border-color: #fff;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+}
+
+/* Tools Menu (Right) */
+#tools-menu {
+    position: absolute;
+    top: 250px; /* Below the Inspector */
+    right: 20px;
+    width: 250px;
+    background-color: rgba(30, 30, 30, 0.9);
+    border: 1px solid #555;
+    border-radius: 6px;
+    color: #fff;
+    font-family: monospace;
+    z-index: 900;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#tools-menu h3 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    border-bottom: 1px solid #555;
+    padding-bottom: 5px;
+    text-align: center;
+}
+
+.tool-btn {
+    background-color: #334433; /* Slightly green tint for medical/tools */
+    color: #eee;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 8px;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.tool-btn:hover {
+    background-color: #445544;
+}
+
+.tool-btn.active {
+    background-color: #557755;
+    border-color: #fff;
+    box-shadow: 0 0 8px rgba(100, 255, 100, 0.4);
+}
+
+/* Context Menu */
+#context-menu {
+    position: absolute;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+    z-index: 1000;
+    min-width: 120px;
+}
+
+#context-menu ul {
+    list-style: none;
+    margin: 0;
+    padding: 5px 0;
+}
+
+#context-menu li {
+    padding: 8px 15px;
+    color: #eee;
+    font-size: 14px;
+    cursor: pointer;
+    user-select: none;
+}
+
+#context-menu li:hover {
+    background-color: #444;
+}
+
+/* Inspector Panel */
+#inspector-panel {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 250px;
+    background-color: rgba(30, 30, 30, 0.9);
+    border: 1px solid #555;
+    border-radius: 6px;
+    color: #fff;
+    font-family: monospace;
+    z-index: 900;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+}
+
+.panel-header {
+    background-color: #222;
+    padding: 10px;
+    border-bottom: 1px solid #555;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    cursor: move; /* Indicate draggable */
+}
+
+.panel-header h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: normal;
+}
+
+#close-inspector {
+    background: none;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#close-inspector:hover {
+    color: #ff5555;
+}
+
+.panel-content {
+    padding: 10px;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 13px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 4px;
+}
+
+.stat-row span:first-child {
+    color: #aaa;
+}
+
+.status-alive { color: #55ff55; }
+.status-dead { color: #ff5555; }
+.status-unconscious { color: #ffff55; }
