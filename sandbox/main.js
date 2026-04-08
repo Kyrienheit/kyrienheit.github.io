@@ -31,7 +31,8 @@ const render = Render.create({
         width: window.innerWidth,
         height: window.innerHeight,
         wireframes: false,
-        background: '#1a1a1a'
+        background: '#1a1a1a',
+        hasBounds: true
     }
 });
 
@@ -1088,11 +1089,15 @@ if (isTouchDevice) {
     });
 
     // ---- Touch state ----
-    let twoFingerActive = false;
-    let twoFingerAngle  = 0;
-    let twoFingerBody   = null;
-    let longPressTimer  = null;
-    const LONG_PRESS_MS = 600;
+    let twoFingerActive   = false;
+    let twoFingerAngle    = 0;
+    let twoFingerBody     = null;
+    let longPressTimer    = null;
+    const LONG_PRESS_MS   = 600;
+    // Pan/zoom state
+    let lastTwoFingerDist = 0;
+    let lastTwoFingerMidX = 0;
+    let lastTwoFingerMidY = 0;
 
     function canvasPos(touch) {
         return { x: touch.clientX, y: touch.clientY };
@@ -1102,24 +1107,25 @@ if (isTouchDevice) {
     render.canvas.addEventListener('touchstart', (e) => {
         e.preventDefault();
 
-        // Two-finger: rotation mode
+        // Two-finger: rotation (on body) OR pan+zoom (on empty space)
         if (e.touches.length >= 2) {
             clearTimeout(longPressTimer);
             twoFingerActive = true;
 
             const t1 = e.touches[0], t2 = e.touches[1];
-            twoFingerAngle = Math.atan2(t2.clientY - t1.clientY, t2.clientX - t1.clientX);
+            twoFingerAngle    = Math.atan2(t2.clientY - t1.clientY, t2.clientX - t1.clientX);
+            lastTwoFingerDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+            lastTwoFingerMidX = (t1.clientX + t2.clientX) / 2;
+            lastTwoFingerMidY = (t1.clientY + t2.clientY) / 2;
 
-            const cx = (t1.clientX + t2.clientX) / 2;
-            const cy = (t1.clientY + t2.clientY) / 2;
             const dynBodies = Composite.allBodies(world).filter(b => !b.isStatic);
-            twoFingerBody = Query.point(dynBodies, { x: cx, y: cy })[0]
+            twoFingerBody = Query.point(dynBodies, { x: lastTwoFingerMidX, y: lastTwoFingerMidY })[0]
                          || Query.point(dynBodies, { x: t1.clientX, y: t1.clientY })[0]
                          || Query.point(dynBodies, { x: t2.clientX, y: t2.clientY })[0]
                          || null;
 
             // Release Matter.js drag so it doesn't interfere
-            render.canvas.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, clientX: cx, clientY: cy }));
+            render.canvas.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, clientX: lastTwoFingerMidX, clientY: lastTwoFingerMidY }));
             return;
         }
 
@@ -1161,18 +1167,54 @@ if (isTouchDevice) {
         e.preventDefault();
         clearTimeout(longPressTimer);
 
-        // Two-finger rotation
+        // Two-finger: rotate body OR pan+zoom viewport
         if (twoFingerActive && e.touches.length >= 2) {
             const t1 = e.touches[0], t2 = e.touches[1];
-            const newAngle = Math.atan2(t2.clientY - t1.clientY, t2.clientX - t1.clientX);
-            const delta    = newAngle - twoFingerAngle;
-            twoFingerAngle = newAngle;
+            const newDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+            const newMidX = (t1.clientX + t2.clientX) / 2;
+            const newMidY = (t1.clientY + t2.clientY) / 2;
 
             if (twoFingerBody && !twoFingerBody.isStatic) {
+                // ── ROTATE ──
+                const newAngle = Math.atan2(t2.clientY - t1.clientY, t2.clientX - t1.clientX);
+                const delta    = newAngle - twoFingerAngle;
+                twoFingerAngle = newAngle;
                 let target = twoFingerBody;
                 if (target.parentRagdoll) target = target.parentRagdoll.torso;
                 Body.setAngularVelocity(target, delta * 8);
+            } else {
+                // ── PAN + ZOOM viewport ──
+                const viewW = render.bounds.max.x - render.bounds.min.x;
+                const viewH = render.bounds.max.y - render.bounds.min.y;
+
+                if (lastTwoFingerDist > 0) {
+                    const zoomFactor = lastTwoFingerDist / newDist;
+                    const ratioX = viewW / window.innerWidth;
+                    const ratioY = viewH / window.innerHeight;
+                    // World-space pinch centre
+                    const wMidX = render.bounds.min.x + newMidX * ratioX;
+                    const wMidY = render.bounds.min.y + newMidY * ratioY;
+                    // New view size (clamped)
+                    const newViewW = Math.min(Math.max(viewW * zoomFactor, window.innerWidth * 0.25), window.innerWidth * 6);
+                    const newViewH = newViewW * (window.innerHeight / window.innerWidth);
+                    render.bounds.min.x = wMidX - (newMidX / window.innerWidth) * newViewW;
+                    render.bounds.max.x = render.bounds.min.x + newViewW;
+                    render.bounds.min.y = wMidY - (newMidY / window.innerHeight) * newViewH;
+                    render.bounds.max.y = render.bounds.min.y + newViewH;
+                }
+
+                // Pan: move bounds opposite to finger movement
+                const curViewW = render.bounds.max.x - render.bounds.min.x;
+                const curViewH = render.bounds.max.y - render.bounds.min.y;
+                const panX = (lastTwoFingerMidX - newMidX) * (curViewW / window.innerWidth);
+                const panY = (lastTwoFingerMidY - newMidY) * (curViewH / window.innerHeight);
+                render.bounds.min.x += panX;  render.bounds.max.x += panX;
+                render.bounds.min.y += panY;  render.bounds.max.y += panY;
             }
+
+            lastTwoFingerDist = newDist;
+            lastTwoFingerMidX = newMidX;
+            lastTwoFingerMidY = newMidY;
             return;
         }
 
