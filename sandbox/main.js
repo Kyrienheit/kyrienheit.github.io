@@ -781,11 +781,40 @@ function setSpawnMode(mode, btnId) {
     if (toolMode) setToolMode(toolMode, null);
 }
 
-document.getElementById('spawn-ragdoll').addEventListener('click', () => setSpawnMode('ragdoll', 'spawn-ragdoll'));
-document.getElementById('spawn-normal-box').addEventListener('click', () => setSpawnMode('normalbox', 'spawn-normal-box'));
-document.getElementById('spawn-box').addEventListener('click', () => setSpawnMode('box', 'spawn-box'));
-document.getElementById('spawn-pistol').addEventListener('click', () => setSpawnMode('pistol', 'spawn-pistol'));
-document.getElementById('spawn-syringe-adrenaline').addEventListener('click', () => setSpawnMode('syringe-adrenaline', 'spawn-syringe-adrenaline'));
+// Spawn button click handlers
+// On mobile → spawns immediately at centre; on desktop → select mode then Q/E to spawn
+const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+
+function mobileSpawn(mode) {
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight * 0.45;
+    if (mode === 'ragdoll')            createRagdoll(cx, cy);
+    else if (mode === 'normalbox')     createNormalBox(cx, cy);
+    else if (mode === 'box')           createDestructibleBox(cx, cy);
+    else if (mode === 'pistol')        createPistol(cx, cy);
+    else if (mode === 'syringe-adrenaline') createSyringe(cx, cy);
+}
+
+document.getElementById('spawn-ragdoll').addEventListener('click', () => {
+    if (isTouchDevice) { mobileSpawn('ragdoll'); return; }
+    setSpawnMode('ragdoll', 'spawn-ragdoll');
+});
+document.getElementById('spawn-normal-box').addEventListener('click', () => {
+    if (isTouchDevice) { mobileSpawn('normalbox'); return; }
+    setSpawnMode('normalbox', 'spawn-normal-box');
+});
+document.getElementById('spawn-box').addEventListener('click', () => {
+    if (isTouchDevice) { mobileSpawn('box'); return; }
+    setSpawnMode('box', 'spawn-box');
+});
+document.getElementById('spawn-pistol').addEventListener('click', () => {
+    if (isTouchDevice) { mobileSpawn('pistol'); return; }
+    setSpawnMode('pistol', 'spawn-pistol');
+});
+document.getElementById('spawn-syringe-adrenaline').addEventListener('click', () => {
+    if (isTouchDevice) { mobileSpawn('syringe-adrenaline'); return; }
+    setSpawnMode('syringe-adrenaline', 'spawn-syringe-adrenaline');
+});
 
 
 function createSyringe(x, y) {
@@ -1016,13 +1045,164 @@ Runner.run(runner, engine);
 
 // Handle window resizing
 window.addEventListener('resize', () => {
-    // Update canvas size
     render.canvas.width = window.innerWidth;
     render.canvas.height = window.innerHeight;
     render.options.width = window.innerWidth;
     render.options.height = window.innerHeight;
-    
-    // Re-adjust ground and wall
     Matter.Body.setPosition(ground, { x: window.innerWidth / 2, y: window.innerHeight + wallThickness / 2 - 20 });
     Matter.Body.setPosition(rightWall, { x: window.innerWidth + wallThickness / 2, y: window.innerHeight / 2 });
 });
+
+// ============================================================
+// MOBILE TOUCH SUPPORT
+// ============================================================
+if (isTouchDevice) {
+    const fireBtn   = document.getElementById('fire-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+
+    // ---- Fire button ----
+    // Show when the player is holding a pistol via MouseConstraint
+    setInterval(() => {
+        if (mouseConstraint.body?.label === 'pistol') {
+            fireBtn.classList.remove('hidden');
+        } else {
+            fireBtn.classList.add('hidden');
+        }
+    }, 150);
+
+    fireBtn.addEventListener('click', () => {
+        const pistol = mouseConstraint.body;
+        if (pistol?.label === 'pistol') firePistol(pistol);
+    });
+
+    // ---- Cancel button (shows when a tool is active) ----
+    // Patch tool buttons to show cancel btn
+    document.getElementById('tool-wire').addEventListener('click',    () => cancelBtn.classList.toggle('hidden', !toolMode));
+    document.getElementById('tool-bandage').addEventListener('click', () => cancelBtn.classList.toggle('hidden', !toolMode));
+
+    cancelBtn.addEventListener('click', () => {
+        stopToolMode();
+        spawnMode = null;
+        spawnBtns.forEach(b => b.classList.remove('active'));
+        cancelBtn.classList.add('hidden');
+    });
+
+    // ---- Touch state ----
+    let twoFingerActive = false;
+    let twoFingerAngle  = 0;
+    let twoFingerBody   = null;
+    let longPressTimer  = null;
+    const LONG_PRESS_MS = 600;
+
+    function canvasPos(touch) {
+        return { x: touch.clientX, y: touch.clientY };
+    }
+
+    // ---- touchstart ----
+    render.canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+
+        // Two-finger: rotation mode
+        if (e.touches.length >= 2) {
+            clearTimeout(longPressTimer);
+            twoFingerActive = true;
+
+            const t1 = e.touches[0], t2 = e.touches[1];
+            twoFingerAngle = Math.atan2(t2.clientY - t1.clientY, t2.clientX - t1.clientX);
+
+            const cx = (t1.clientX + t2.clientX) / 2;
+            const cy = (t1.clientY + t2.clientY) / 2;
+            const dynBodies = Composite.allBodies(world).filter(b => !b.isStatic);
+            twoFingerBody = Query.point(dynBodies, { x: cx, y: cy })[0]
+                         || Query.point(dynBodies, { x: t1.clientX, y: t1.clientY })[0]
+                         || Query.point(dynBodies, { x: t2.clientX, y: t2.clientY })[0]
+                         || null;
+
+            // Release Matter.js drag so it doesn't interfere
+            render.canvas.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, clientX: cx, clientY: cy }));
+            return;
+        }
+
+        // Single touch
+        const t   = e.touches[0];
+        const pos = canvasPos(t);
+        currentMousePos.x = pos.x;
+        currentMousePos.y = pos.y;
+
+        // Long-press → context menu (right-click equivalent)
+        longPressTimer = setTimeout(() => {
+            const clicked = Query.point(Composite.allBodies(world), pos);
+            if (clicked.length > 0 && clicked[0].parentRagdoll) {
+                selectedRagdoll = clicked[0].parentRagdoll;
+                contextMenu.style.left = pos.x + 'px';
+                contextMenu.style.top  = Math.max(0, pos.y - 60) + 'px';
+                contextMenu.classList.remove('hidden');
+            }
+        }, LONG_PRESS_MS);
+
+        // Tool mode: start drag (simulate mousedown on canvas)
+        if (toolMode) {
+            const clicked = Query.point(Composite.allBodies(world), pos);
+            if (clicked.length > 0) {
+                dragStartBody = clicked[0];
+                dragStartPoint = { ...pos };
+                dragStartBody.localClickOffset = {
+                    x: pos.x - dragStartBody.position.x,
+                    y: pos.y - dragStartBody.position.y
+                };
+            }
+        }
+        // (No-tool mode: Matter.js internal touch handler takes care of drag)
+
+    }, { passive: false });
+
+    // ---- touchmove ----
+    render.canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        clearTimeout(longPressTimer);
+
+        // Two-finger rotation
+        if (twoFingerActive && e.touches.length >= 2) {
+            const t1 = e.touches[0], t2 = e.touches[1];
+            const newAngle = Math.atan2(t2.clientY - t1.clientY, t2.clientX - t1.clientX);
+            const delta    = newAngle - twoFingerAngle;
+            twoFingerAngle = newAngle;
+
+            if (twoFingerBody && !twoFingerBody.isStatic) {
+                let target = twoFingerBody;
+                if (target.parentRagdoll) target = target.parentRagdoll.torso;
+                Body.setAngularVelocity(target, delta * 8);
+            }
+            return;
+        }
+
+        if (!e.touches.length) return;
+        const t   = e.touches[0];
+        currentMousePos.x = t.clientX;
+        currentMousePos.y = t.clientY;
+        // Matter.js internal touchmove updates mouse.position automatically
+
+    }, { passive: false });
+
+    // ---- touchend ----
+    render.canvas.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        clearTimeout(longPressTimer);
+
+        if (e.touches.length < 2 && twoFingerActive) {
+            twoFingerActive = false;
+            twoFingerBody   = null;
+        }
+
+        // Complete tool drag via synthetic mouseup (triggers existing mouseup handler)
+        if (!twoFingerActive && toolMode && dragStartBody && e.changedTouches.length > 0) {
+            const t = e.changedTouches[0];
+            window.dispatchEvent(new MouseEvent('mouseup', {
+                bubbles: true, cancelable: true,
+                clientX: t.clientX, clientY: t.clientY,
+                button: 0
+            }));
+        }
+
+    }, { passive: false });
+}

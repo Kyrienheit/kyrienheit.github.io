@@ -13,14 +13,14 @@
 </head>
 
 <body>
-    <!-- Spawn Menu (Left Side) -->
+    <!-- Spawn Menu (Left Side / Top Bar on Mobile) -->
     <div id="spawn-menu">
         <h3>Spawn</h3>
         <button id="spawn-ragdoll" class="spawn-btn">Ragdoll</button>
         <button id="spawn-normal-box" class="spawn-btn">Normal Box</button>
-        <button id="spawn-box" class="spawn-btn">Destructible Box</button>
+        <button id="spawn-box" class="spawn-btn">Dest. Box</button>
         <button id="spawn-pistol" class="spawn-btn">Pistol</button>
-        <button id="spawn-syringe-adrenaline" class="spawn-btn">Adrenaline Syringe</button>
+        <button id="spawn-syringe-adrenaline" class="spawn-btn">Syringe</button>
     </div>
 
     <!-- Tools Menu (Right Side) -->
@@ -67,6 +67,12 @@
             </div>
         </div>
     </div>
+
+    <!-- Mobile: Fire Button (visible when holding pistol) -->
+    <button id="fire-btn" class="hidden">🎯 Fire</button>
+
+    <!-- Mobile: Cancel active tool/spawn mode -->
+    <button id="cancel-btn" class="hidden">✕ Cancel</button>
 
     <script src="main.js"></script>
 </body>

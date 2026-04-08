@@ -188,3 +188,86 @@ body {
     font-weight: 500;
     text-shadow: 1px 1px 0px rgba(255,255,255,0.8);
 }
+
+/* ── Mobile Responsive ── */
+@media (max-width: 768px) {
+    body {
+        height: 100dvh;
+        overflow: hidden;
+    }
+
+    .desktop {
+        height: 100dvh;
+    }
+
+    .channel-grid {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(4, 1fr);
+        gap: 4vw;
+        padding: 5vw 5vw 3vw 5vw;
+    }
+
+    .channel {
+        border-radius: 4vw;
+    }
+
+    .channel-inner {
+        border-radius: 3.5vw;
+    }
+
+    .channel-overlay {
+        border-radius: 3.5vw;
+    }
+
+    /* Mobilde hover yerine tap feedback */
+    .channel:active:not(.empty) {
+        transform: scale(0.97);
+        box-shadow:
+            inset 0 0 10px rgba(255,255,255,1),
+            0 10px 20px rgba(0,0,0,0.15),
+            0 0 0 4px #42c5f5,
+            0 0 18px rgba(66, 197, 245, 0.6);
+    }
+
+    .channel-title {
+        font-size: 3.5vw;
+        padding: 1vw 3vw;
+        border-radius: 3vw;
+        bottom: 1.5vw;
+        /* Mobilde her zaman görünür */
+        opacity: 1;
+        transform: translateX(-50%);
+    }
+
+    .channel:hover:not(.empty) .channel-title {
+        transform: translateX(-50%);
+    }
+
+    .bottom-bar {
+        height: 10vh;
+        padding: 0 5vw;
+    }
+
+    .clock {
+        font-size: 6vw;
+    }
+
+    /* iframe preview mobil için scale ayarı */
+    .preview-iframe {
+        width: 300%;
+        height: 300%;
+        transform: scale(0.333);
+    }
+}
+
+/* Çok küçük ekranlar (iPhone SE vb.) */
+@media (max-width: 400px) {
+    .channel-grid {
+        gap: 3vw;
+        padding: 4vw;
+    }
+
+    .channel-title {
+        font-size: 4vw;
+    }
+}
